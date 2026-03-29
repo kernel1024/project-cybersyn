@@ -444,6 +444,8 @@ function inventory_tab.handle.on_inventory_item_click(player, player_data, refs,
 		refs.manager_item_filter.elem_value = signal
 		player_data.search_item = item_name
 		interface_raise_item_selected(e.player_index, item_name)
+		interop_add_recent_item(e.player_index, item_name, "cybersyn")
+		player_data.recent_panel_dirty = true
 
 		-- Switch to stations tab
 		local tabbed_pane = refs.manager_tabbed_pane
