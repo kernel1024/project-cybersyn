@@ -1,4 +1,12 @@
 ---------------------------------------------------------------------------------------------------
+Version: 2.0.54
+Date: 2026-03-30
+  Features:
+    - (Manager) Add filter history to Manager's top bar
+    - (Manager) Add cross-mod interop protocol support
+  Changes:
+    - (Manager) Add average travel-to-P/R times to the delivery breakdown stats
+---------------------------------------------------------------------------------------------------
 Version: 2.0.53
 Date: 2026-03-15
   Bugfixes:
