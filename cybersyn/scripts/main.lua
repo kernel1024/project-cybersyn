@@ -91,7 +91,7 @@ function on_refueler_broken(map_data, refueler_id, refueler)
 					lock_train(train.entity)
 					send_alert_refueler_of_train_broken(map_data, train.entity)
 				else
-					train.se_awaiting_removal = train_id
+					train.se_awaiting_removal = true
 				end
 			end
 		end
@@ -190,7 +190,7 @@ function on_station_broken(map_data, station_id, station)
 						lock_train(train.entity)
 						send_alert_station_of_train_broken(map_data, train.entity)
 					else
-						train.se_awaiting_removal = train_id
+						train.se_awaiting_removal = true
 					end
 				end
 			end
@@ -554,9 +554,13 @@ function combinator_update(map_data, comb, reset_display)
 			local train_id = depot.available_train_id
 			if train_id then
 				local train = map_data.trains[train_id]
-				remove_available_train(map_data, train_id, train)
-				add_available_train_to_depot(map_data, mod_settings, train_id, train, id, depot)
-				interface_raise_train_status_changed(train_id, STATUS_D, STATUS_D)
+				if train then
+					remove_available_train(map_data, train_id, train)
+					add_available_train_to_depot(map_data, mod_settings, train_id, train, id, depot)
+					interface_raise_train_status_changed(train_id, STATUS_D, STATUS_D)
+				else
+					depot.available_train_id = nil
+				end
 			end
 		elseif type == 4 then
 			set_refueler_from_comb(map_data, mod_settings, id, entity --[[@as Refueler]])
@@ -925,6 +929,14 @@ local function main()
 
 	register_gui_actions()
 
+	-- Wire up cross-mod interop: when an external item arrives, mark player panels dirty
+	interop_on_external_item_callback = function(player_index, item_name, source)
+		local player_data = storage.manager and storage.manager.players[player_index]
+		if player_data and player_data.is_manager_open then
+			player_data.recent_panel_dirty = true
+		end
+	end
+
 	script.on_init(function()
 		init_global()
 		if analytics.is_enabled() then
@@ -933,16 +945,26 @@ local function main()
 		ElevatorTravel.setup_se_compat()
 		picker_dollies_compat.setup_picker_dollies_compat()
 		manager.on_init()
+		interop_subscribe_to_events()
 	end)
 
 	script.on_configuration_changed(function(e)
 		on_config_changed(e)
 		manager.on_migration()
+		interop_subscribe_to_events()
 	end)
 
 	script.on_load(function()
 		ElevatorTravel.setup_se_compat()
 		picker_dollies_compat.setup_picker_dollies_compat()
+		interop_subscribe_to_events()
+	end)
+
+	-- Ensure on_gui_elem_changed is dispatched through flib (may have been skipped
+	-- if another handler was registered first). We wrap to also call flib dispatch.
+	local flib_gui = require("__flib__.gui")
+	script.on_event(defines.events.on_gui_elem_changed, function(e)
+		flib_gui.dispatch(e)
 	end)
 
 	script.on_event(defines.events.on_player_removed, manager.on_player_removed)

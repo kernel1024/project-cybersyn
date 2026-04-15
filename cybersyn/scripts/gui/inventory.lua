@@ -205,6 +205,7 @@ function inventory_tab.build(map_data, player_data)
 		provided_children[#provided_children + 1] = {
 			type = "sprite-button",
 			sprite = sprite_path,
+			quality = quality,
 			style = "flib_slot_button_green",
 			tags = { item_name = item, item_hash = item_hash },
 			handler = inventory_tab.handle.on_inventory_item_click,
@@ -322,6 +323,7 @@ function inventory_tab.build(map_data, player_data)
 		return {
 			type = "sprite-button",
 			sprite = sprite_path,
+			quality = quality,
 			style = button_style,
 			tags = { item_name = item, item_hash = item_hash },
 			handler = inventory_tab.handle.on_inventory_item_click,
@@ -366,6 +368,7 @@ function inventory_tab.build(map_data, player_data)
 		in_transit_children[#in_transit_children + 1] = {
 			type = "sprite-button",
 			sprite = sprite_path,
+			quality = quality,
 			style = "flib_slot_button_blue",
 			tags = { item_name = item, item_hash = item_hash },
 			handler = inventory_tab.handle.on_inventory_item_click,
@@ -440,7 +443,10 @@ function inventory_tab.handle.on_inventory_item_click(player, player_data, refs,
 		local signal = util.signalid_from_name(item_name)
 		refs.manager_item_filter.elem_value = signal
 		player_data.search_item = item_name
-		
+		interface_raise_item_selected(e.player_index, item_name)
+		interop_add_recent_item(e.player_index, item_name, "cybersyn")
+		player_data.recent_panel_dirty = true
+
 		-- Switch to stations tab
 		local tabbed_pane = refs.manager_tabbed_pane
 		if tabbed_pane then
